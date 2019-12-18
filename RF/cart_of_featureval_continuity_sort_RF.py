@@ -6,7 +6,7 @@ create on 2019-10
 """
 import csv
 import operator
-import numpy as np
+from numpy import  *
 from random import randrange
 
 from show_matplotlip import creatPlot as cr
@@ -103,7 +103,7 @@ def splitDataSet(dataSet, axis, value, threshold):
 
     return retDataSet
 
-def chooseBestFeatureToSplit(dataSet,m):
+def chooseBestFeatureToSplit(dataSet):
     """
     选择最佳特征
     :param dataSet: 数据集
@@ -117,8 +117,8 @@ def chooseBestFeatureToSplit(dataSet,m):
     bestBinaryFeatVal = ""
 
     # 在numFeatures个特征里随机选择m个特征，然后在这m个特征里选择一个合适的分类特征。
-    for x in range(m):
-        index.append(np.random.randint(numFeatures))
+    m = int(math.log(numFeatures, 2))
+    index = random.choice(a=range(numFeatures), size=m, replace=False, p=None)
 
     for i in index:
         featList = [example[i] for example in dataSet]
@@ -176,7 +176,7 @@ def creatTree(dataSet, labels, m = 20, max_level = 10):
     if len(dataSet) == 1:
         majorityCnt(classList)
 
-    bestFeat, bestBinarySplitVal, bestGini = chooseBestFeatureToSplit(dataSet,m)
+    bestFeat, bestBinarySplitVal, bestGini = chooseBestFeatureToSplit(dataSet)
     #如果所有特征Gini都一样，多数表决决定类别
     if bestFeat == -1:
         return majorityCnt(classList)
@@ -217,20 +217,19 @@ def subsample(dataset):
 
     return sample
 
-def RondomForest(dataSet, labels, n, m, max_level):
+def RondomForest(dataSet, labels, n, max_level):
     """
     随机森林
     :param dataSet: 数据集
     :param labels: 特征
-    :param n: 决策树个数（n个子集）
-    :param m: 随机选取的特征的个数
+    :param n: 决策树棵数（n个子集）
     :param max_level: 树的深度
     :return: 森林
     """
     Trees = []
     for i in range(n):
         dataSet = subsample(dataSet)
-        tree = creatTree(dataSet, labels, m, max_level)
+        tree = creatTree(dataSet, labels, max_level)
         Trees.append(tree)
 
     return Trees
@@ -240,10 +239,10 @@ def main():
     dataSet, labels = ReadDataSet(path)
     print "{0}\n{1}".format(dataSet, labels)
 
-    Trees = RondomForest(dataSet, labels, 10, 6, 6)
+    Trees = RondomForest(dataSet, labels, 10, 6)
     #输出每一颗决策树
-    for i in range(10):
-        print Trees[i]
+    # for i in range(10):
+    #     print Trees[i]
         # cr.createPlot(Trees[i])
 
 
