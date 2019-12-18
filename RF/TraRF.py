@@ -176,7 +176,7 @@ class TRARF():
         if bestFeature == None:
             return bestBinarySplitVal
 
-        # 如果所有特征的方差都一样，取平均值
+        # 如果所有特征的方差都比没划分时，取平均值建立节点
         if bestFeature == -1:
             return self.regLeaf(dataSet)
 
@@ -253,7 +253,7 @@ class TRARF():
         """
         预测
         :param tree: 决策树
-        :param sample: 预测数据
+        :param predictData: 预测数据
         :param predictLabelsDict: 特征字典索引
         :return: 预测值
         """
