@@ -3,6 +3,7 @@ from scipy.spatial.distance import pdist, squareform
 import numpy as np
 import pandas as pd
 from minepy import MINE
+import math
 import copy
 
 
@@ -33,6 +34,9 @@ class ChooseFeature(object):
         dcov2_xy = (A * B).sum() / float(n * n)
         dcov2_xx = (A * A).sum() / float(n * n)
         dcov2_yy = (B * B).sum() / float(n * n)
+
+        if dcov2_xx==0 or dcov2_yy==0:
+            return 0.0
         dcor = np.sqrt(dcov2_xy) / np.sqrt(np.sqrt(dcov2_xx) * np.sqrt(dcov2_yy))
         return dcor
 
@@ -57,6 +61,7 @@ class ChooseFeature(object):
     def calculate_x(self,data):
         value_x = list()
         for i in range(len(data)):
+            print ("i",i)
             value_x.append([])
             for j in range(len(data)):
                 if i < j:
@@ -102,25 +107,19 @@ class ChooseFeature(object):
         :return: 创建了个有一个被选择的特征列表，跟新未被选择的特征剩余的特征集合列表
         '''
         first_feature_order = -1
-
         for i in range(len(value_y)):
             if value_y[i] > Mmax:
                 Mmax = value_y[i]
-                # print(Mmax)
                 first_feature_order = i
         first_feature_values = data_test[first_feature_order]
         data_feature_lable.append(data_test_lable[first_feature_order])
         data_feature_order.append(first_feature_order)
         tab[first_feature_order] = 1
         data_feature.append(first_feature_values)
-        # print(data_left[first_feature_order])
-        # print(data_feature_lable)
-        # print(data_left_lable[first_feature_order])
-        # print (data_left_lable)
         return data_feature, data_feature_lable, tab, data_feature_order
 
     def other_feature(self,data_test, data_test_lable, value_y, value_x, data_feature, data_feature_lable,
-                      data_feature_order,tab,):
+                      data_feature_order,tab,numFeatures):
         Mmax = float('-inf')
         '''
         选出剩下的最优特征
@@ -130,39 +129,26 @@ class ChooseFeature(object):
         :return: 更新的被选择的特征，跟新未被选择的特征
         '''
         feature_order = -1
-
         for i in range(len(data_test)):
             if tab[i] == 1:
                 continue
-            # print("i",i)
-            # print (data_left[i])
             MCC_left_y = value_y[i]
             MCC_left_feature = 0
             for j in data_feature_order:
-                # print("len",len(data_feature))
-                # print("j",j)
                 MCC_left_feature = MCC_left_feature + value_x[i][j]
-                #print("MCC_left_feature",MCC_left_feature)
             if MCC_left_y - ((MCC_left_feature) / len(data_feature)) > Mmax:
-                # print("dfdghgfjgjhgj")
                 Mmax = MCC_left_y - ((MCC_left_feature) / len(data_feature))
                 feature_order = i
-                # print(feature_order)
-        if Mmax >= 0:
+        if Mmax >= value_y[feature_order]/(int(math.log(numFeatures, 2))):
             data_feature_lable.append(data_test_lable[feature_order])
             data_feature.append(data_test[feature_order])
             tab[feature_order] = 1
             data_feature_order.append(feature_order)
             self.other_feature(data_test, data_test_lable, value_y, value_x, data_feature, data_feature_lable,
-                          data_feature_order, tab, )
+                          data_feature_order, tab, numFeatures)
         else:
             return data_feature, data_feature_lable, data_feature_order
 
-        #print("Mmax", Mmax)
-        #print("value_y",value_y[feature_order])
-
-        #del data_left[feature_order]
-        #del data_left_lable[feature_order]
 
 
     def return_data(self,filename):
@@ -173,7 +159,6 @@ class ChooseFeature(object):
         :return: 返回选择的数据形式为横着的列表
         '''
         train_test = pd.read_csv(filename)   #1
-        print train_test
         train_test = train_test.iloc[:, 0:]  # 读出所有特征数据，数据类型为矩阵类型
         list_number = train_test.columns.values  # 原始特征值的标签
         class_y = self.read_values(train_test, list_number, local_number=-1)
@@ -188,13 +173,18 @@ class ChooseFeature(object):
         for i in range(len(data_header)):
             feature_test.append(self.read_values(train_test, data_header, i))
         result_y = self.calculate_y(feature_test,class_y)
+        result_y_xlse = pd.DataFrame(result_y)
+        result_y_xlse.to_excel("../datas/blogData_result_y.xlsx")
         result_x = self.calculate_x(feature_test)
+        result_x_xlse = pd.DataFrame(result_x)
+        result_x_xlse.to_excel("../datas/blogData_result_x.xlsx")
+
         #print("result_y",result_y)
         #print("result_x",result_x)
         self.first_feature(result_y,feature_test,data_header,feature_choose_values, feature_choose_lable,
                            feature_test_oder, tab)
         self.other_feature(feature_test, data_header, result_y, result_x, feature_choose_values, feature_choose_lable,
-                       feature_test_oder, tab)
+                       feature_test_oder, tab,len(data_header))
         feature_choose_values.append(class_y)
         # feature_choose_lable.append(list_number[-1])
         #print(feature_choose_lable),print(np.array(feature_choose_values).transpose())
@@ -203,16 +193,6 @@ class ChooseFeature(object):
 
 if __name__ == "__main__":
     test1 = ChooseFeature()
-    data,datalable = test1.return_data("../datas/CASP.csv")
+    data,datalable = test1.return_data("../datas/blogData.csv")
     print data
     print datalable
-
-
-
-
-
-
-
-
-
-
