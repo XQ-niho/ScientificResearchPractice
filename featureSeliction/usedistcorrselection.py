@@ -162,7 +162,7 @@ class featureSelection():
 
         return all_featuresMCC
 
-    def chooseBestFeature(self, dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, mccFY, betweenFeatureMCC, y, m, cnt):
+    def chooseBestFeature(self, dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, mccFY, betweenFeatureMCC, y, cnt):
         """
         特征选择
         :param dataSet: 数据集
@@ -176,13 +176,12 @@ class featureSelection():
         :return: 选择的特征索引及特征值
         """
 
-        if len(isChooseFeaturesIndex) == m:
-            return
+        # if len(isChooseFeaturesIndex) == m:
+        #     return
 
         dataLen = len(dataSet)
 
-        if m > dataLen:
-            print u"特征个数为：{0}，不足：{1}个，请重新选择".format(len(dataSet),m)
+        if cnt == dataLen:
             return
 
         if cnt == 1:
@@ -192,9 +191,7 @@ class featureSelection():
             isChooseFeaturesValue.append(dataSet[thefirstfeatureId])
             mccFY = allmdis
 
-            cnt += 1
-
-            self.chooseBestFeature(dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, mccFY, betweenFeatureMCC, y, m, cnt)
+            self.chooseBestFeature(dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, mccFY, betweenFeatureMCC, y, cnt + 1)
 
         else:
             maxMCC = float("-inf")
@@ -211,16 +208,20 @@ class featureSelection():
                             mccff += betweenFeatureMCC[index][isChooseIndex] / 2
                         else:
                             mccff += betweenFeatureMCC[isChooseIndex][index] / 2
-                    if mccfy - mccff / isChooselen  >= maxMCC:
-                        maxMCC = mccfy - mccff / isChooselen
+                    betweenMCC = mccfy / (mccff / isChooselen)
+                    if betweenMCC  >= maxMCC and betweenMCC >= 1.0:
+                        # print 'mccfy/2：{0}\t result：{1}'.format(mccfy/2, mccfy / (mccff / isChooselen))
+                        maxMCC = betweenMCC
                         nextAddIndex = index
+            print maxMCC
+            if nextAddIndex != -1:
+                isChooseFeaturesIndex.append(nextAddIndex)
+                isChooseFeaturesValue.append(dataSet[nextAddIndex])
 
-            isChooseFeaturesIndex.append(nextAddIndex)
-            isChooseFeaturesValue.append(dataSet[nextAddIndex])
 
-            self.chooseBestFeature(dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, mccFY, betweenFeatureMCC, y, m, cnt)
+            self.chooseBestFeature(dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, mccFY, betweenFeatureMCC, y, cnt + 1)
 
-    def getBestFeatuleAanValue(self, path, m):
+    def getBestFeatuleAanValue(self, path):
         """
         得到选出的特征及数据集
         :param path:数据集路径
@@ -233,7 +234,7 @@ class featureSelection():
         isChooseFeaturesValue = []
         betweenFeatureMCC = self.allFeaturesMCC(dataSet)
         # print betweenFeatureMCC
-        self.chooseBestFeature(dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, [], betweenFeatureMCC, YValue, m, 1)
+        self.chooseBestFeature(dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, [], betweenFeatureMCC, YValue, 1)
         # print isChooseFeaturesIndex
         # print isChooseFeaturesValue
 
@@ -251,8 +252,8 @@ class featureSelection():
         return dataSets, chooseFeature
 
 if __name__ =="__main__":
-    path = "../datas/winequalityred.csv"
+    path = "../datas/data1.csv"
     fs = featureSelection()
-    data, features = fs.getBestFeatuleAanValue(path, 4)
+    data, features = fs.getBestFeatuleAanValue(path)
     print data
     print features
