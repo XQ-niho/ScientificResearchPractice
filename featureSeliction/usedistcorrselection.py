@@ -213,7 +213,6 @@ class featureSelection():
                         # print 'mccfy/2：{0}\t result：{1}'.format(mccfy/2, mccfy / (mccff / isChooselen))
                         maxMCC = betweenMCC
                         nextAddIndex = index
-            print maxMCC
             if nextAddIndex != -1:
                 isChooseFeaturesIndex.append(nextAddIndex)
                 isChooseFeaturesValue.append(dataSet[nextAddIndex])
@@ -252,7 +251,7 @@ class featureSelection():
         return dataSets, chooseFeature
 
 if __name__ =="__main__":
-    path = "../datas/data1.csv"
+    path = "../datas/winequalityred.csv"
     fs = featureSelection()
     data, features = fs.getBestFeatuleAanValue(path)
     print data

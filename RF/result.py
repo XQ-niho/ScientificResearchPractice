@@ -9,7 +9,7 @@ from RF.selectTrainAndPredictDataSets import GETDATASET
 def main():
 
 
-    path = "../datas/CASP.csv"
+    path = "../datas/winequalityred.csv"
 
     # treeNum = 2
     treeDepth = 10
@@ -23,7 +23,7 @@ def main():
     TRARSSALL = []; OPTRSSALL = []
     for count in range(10):
         TRARSSL = []; OPTRSSL = []
-        for treenum in range(5, 201, 5):
+        for treenum in range(5, 100, 5):
             #传统的随机森林
             tra = TRARF(treenum, treeDepth, TRAtrainData, TRApredicData, TRAlabels)
             TRARSS = tra.result()
@@ -37,16 +37,12 @@ def main():
 
 
     df = pd.DataFrame(TRARSSALL, columns=['5','10','15','20','25','30','35','40','45','50','55','60','65','70',
-                                          '75','80','85','90','95','100','105','110','115','120','125','130',
-                                          '135','140','145','150','155','160','165','170','175','180','185','190',
-                                          '195','200'])
-    df.to_excel("../datas/CSAPTRA.xlsx", index=False)
+                                          '75','80','85','90','95','100'])
+    df.to_excel("../datas/WinequalityredTRA04.xlsx", index=False)
 
     dfopt = pd.DataFrame(OPTRSSALL, columns=['5','10','15','20','25','30','35','40','45','50','55','60','65','70',
-                                          '75','80','85','90','95','100','105','110','115','120','125','130',
-                                          '135','140','145','150','155','160','165','170','175','180','185','190',
-                                          '195','200'])
-    dfopt.to_excel("../datas/CSAPOPT.xlsx", index=False)
+                                          '75','80','85','90','95','100'])
+    dfopt.to_excel("../datas/WinequalityredOPT04.xlsx", index=False)
 
 
 if __name__ == "__main__":

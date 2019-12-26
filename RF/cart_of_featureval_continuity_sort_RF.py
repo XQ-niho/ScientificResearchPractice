@@ -8,6 +8,7 @@ import csv
 from numpy import *
 from random import randrange
 import operator
+import time
 
 from show_matplotlip import creatPlot as cr
 
@@ -338,7 +339,7 @@ def correctRate(y, predictY):
     return corr
 
 
-def sortResult(path, min_tree_num, max_tree_num, treeInterval, tree_depth):
+def sortResult(path, tree_num, tree_depth):
     """
     预测结果
     :param path:
@@ -357,27 +358,43 @@ def sortResult(path, min_tree_num, max_tree_num, treeInterval, tree_depth):
 
     # 得到预测集的类别
     y = [example[-1] for example in predictData]
+    trainy = [example[-1] for example in trainData]
 
     # 预测 先把特征与索引建立字典为预测时找到对应的数据
     labelsOfDict = labelsDict(labels)
 
-    for tree_num in range(min_tree_num, max_tree_num, treeInterval):
 
-        # 产生森林 参数（训练集，特征，方差，树的个数，随机选择特征的个数，树的森度）
-        Trees = RondomForest(trainData, labels, tree_num, tree_depth)
+    # 产生森林 参数（训练集，特征，方差，树的个数，随机选择特征的个数，树的森度）
+    Trees = RondomForest(trainData, labels, tree_num, tree_depth)
 
-        # 得到每棵树的应变量的值 参数(森林，测试集，特征索引字典)
-        predictY = getPredictY(Trees, predictData, labelsOfDict)
+    # 得到每棵树的因变量的值 参数(森林，测试集，特征索引字典)
+    predictY = getPredictY(Trees, predictData, labelsOfDict)
 
-        # 得到当前trees的准确率
-        corr = correctRate(y, predictY)
+    # 得到训练集每棵树的因变量的值
+    train_predictY = getPredictY(Trees, trainData, labelsOfDict)
 
-        #得到全部trees的准确率
-        allcorr.append(corr)
+    # 得到当前trees的准确率
+    corr = correctRate(y, predictY)
+    train_corr = correctRate(trainy, train_predictY)
 
-    return allcorr
+    return corr, train_corr
 
 if __name__ == '__main__':
     path = "../datas/splice.csv"
-    allcorr = sortResult(path, 10, 100, 2, 15)
-    print allcorr
+
+    start = time.clock()
+
+    corr, train_corr = sortResult(path,20,15)
+
+    end = time.clock()
+    print"""
+    尊敬的用户，建模结果如下：
+    ---------------------
+    建模所耗时间：{}s
+    训练集分类准确率：{}
+    测试集分类准确率：{}
+    ---------------------
+    训练集和测试集之比：7:3
+    单颗树划分属性标准：信息增益
+    叶子节点处理方式：投票选择
+    """.format(end - start, train_corr, corr)

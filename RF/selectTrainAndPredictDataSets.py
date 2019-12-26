@@ -14,16 +14,16 @@ class GETDATASET():
 
     def OPTgetDataSet(self, filename):
 
-        fs = ChooseFeature()
+        fs = featureSelection()
 
         # 得到特征选取后的数据 参数（文件路径，要选择的特征数）
-        dataSet, labels = fs.return_data(filename)
+        dataSet, labels = fs.getBestFeatuleAanValue(filename)
         # print "{0}\n{1}".format(dataSet, labels)
         # labels, dataSet = selDataSetRes(filename, self.featureChoNum)
         # print "{0}\n{1}".format(dataSet, labels)
 
         #得到数据集的数组形式
-        # dataSet = np.array(dataSet)
+        dataSet = np.array(dataSet)
 
         return dataSet, labels
 

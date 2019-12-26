@@ -321,6 +321,7 @@ class TRARF():
 
         # 得到预测集y
         y = self.predictData[:, -1]
+        trainy = self.trainData[:, -1]
 
         # 产生森林 参数（训练集，特征，方差，树的个数，随机选择特征的个数，树的森度）
         Trees = self.RondomForest(self.trainData, self.labels, self.treeNum, self.treeDepth)
@@ -328,11 +329,15 @@ class TRARF():
         # 预测 先把特征与索引建立字典为预测时找到对应的数据
         predictLabelsDict = self.labelsDict(self.labels)
 
-        # 得到每棵树的应变量的值 参数(森林，测试集，特征索引字典)
+        # 得到测试集每棵树的应变量的值 参数(森林，测试集，特征索引字典)
         predictY = self.getPredictY(Trees, self.predictData, predictLabelsDict)
 
-        RSS = self.calRSS(y, predictY)
+        # 得到训练集每棵树的因变量的值
+        trainpredictY = self.getPredictY(Trees, self.trainData, predictLabelsDict)
 
-        return RSS
+        RSS = self.calRSS(y, predictY)
+        trainRSS = self.calRSS(trainy, trainpredictY)
+
+        return RSS, trainRSS
 
 

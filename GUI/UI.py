@@ -4,6 +4,7 @@ import pandas as pd
 import wx
 import wx.grid
 import xlrd
+import time
 import os
 import csv
 # from ARRF_audiology import result, getAttr_grop
@@ -343,32 +344,22 @@ class TestFrame():
         self.ch2 = wx.Choice(self.pfmet, -1, choices=list2,size=(120, 22), pos=(440, 118))
         self.ch2.Bind(wx.EVT_CHOICE, self.on_choice)
 
-        self.ft1 = wx.StaticText(self.pfmet, label='min_treenum：', pos=(343, 153), style=wx.ALIGN_CENTER)
+        self.ft1 = wx.StaticText(self.pfmet, label='tree_num：', pos=(343, 153), style=wx.ALIGN_CENTER)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.ft1.SetFont(font)
         self.tree_num = wx.TextCtrl(self.pfmet, size=(120, 22), pos=(440, 148))
 
-        self.ft4 = wx.StaticText(self.pfmet, label='treeInterval：', pos=(340, 183), style=wx.ALIGN_CENTER)
-        font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
-        self.ft4.SetFont(font)
-        self.tree_num = wx.TextCtrl(self.pfmet, size=(120, 22), pos=(440, 178))
-
-        self.ft5 = wx.StaticText(self.pfmet, label='max_treenum：', pos=(343, 213), style=wx.ALIGN_CENTER)
-        font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
-        self.ft5.SetFont(font)
-        self.tree_num = wx.TextCtrl(self.pfmet, size=(120, 22), pos=(440, 208))
-
-        self.ft2 = wx.StaticText(self.pfmet, label='tree_depth：', pos=(343, 243), style=wx.ALIGN_CENTER)
+        self.ft2 = wx.StaticText(self.pfmet, label='tree_depth：', pos=(343, 183), style=wx.ALIGN_CENTER)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.ft2.SetFont(font)
-        self.tree_depth = wx.TextCtrl(self.pfmet, size=(120, 22), pos=(440, 238))
+        self.tree_depth = wx.TextCtrl(self.pfmet, size=(120, 22), pos=(440, 178))
 
-        self.ft3 = wx.StaticText(self.pfmet, label='ratio：', pos=(343, 273), style=wx.ALIGN_CENTER)
+        self.ft3 = wx.StaticText(self.pfmet, label='ratio：', pos=(343, 213), style=wx.ALIGN_CENTER)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.ft3.SetFont(font)
-        self.ratio = wx.TextCtrl(self.pfmet,  value="7:3",size=(120, 22), pos=(440, 268),style = wx.TE_READONLY)
+        self.ratio = wx.TextCtrl(self.pfmet,  value="7:3",size=(120, 22), pos=(440, 208),style = wx.TE_READONLY)
 
-        btn3 = wx.Button(self.pfmet, label='开始建模', pos=(343, 303), size=(225, 30))
+        btn3 = wx.Button(self.pfmet, label='开始建模', pos=(343, 243), size=(225, 30))
         btn3.Bind(wx.EVT_BUTTON, self.btn3rec_fmet)
 
         self.pfmet.SetSizer(Box_Fmet)
@@ -383,24 +374,40 @@ class TestFrame():
         return int(self.tree_num.GetValue()), int(self.tree_depth.GetValue())
 
     def btn3rec_fmet(self,event):
-        self.corr = ''
+        self.corr = ''; self.train_corr = ''
         tree_num, tree_depth = self.getSortParam()
         if self.choose == u'分类预测':
-            self.corr = sr.sortResult(self.filepath, tree_num, tree_depth)
+            self.start = time.clock()
+            self.corr, self.train_corr = sr.sortResult(self.filepath, tree_num, tree_depth)
+            self.end = time.clock()
+            # print self.corr
         else:
             pass
 
-        frame2 = wx.Frame(parent=None, title='结果展示', size=(800, 330))
+        frame2 = wx.Frame(parent=None, title='随机森林分类建模结果', size=(500, 400))
         p2 = wx.Panel(frame2)
 
         Box_ms = wx.BoxSizer(wx.VERTICAL)
 
-        tc1 = wx.StaticText(p2, label='corr:')
+        tc1 = wx.StaticText(p2, label='建模结果:')
         Box_ms.Add(tc1, 0, wx.TOP | wx.LEFT, border=5)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         tc1.SetFont(font)
-        tc2 = wx.TextCtrl(p2, value=(str(self.corr)), style=(wx.TE_MULTILINE | wx.TE_DONTWRAP | wx.TE_READONLY),
-                               size=(800, 60))
+
+        str_corr = """
+        尊敬的用户，建模结果如下：
+        ---------------------
+        建模所耗时间：{}s
+        训练集分类准确率：{}
+        测试集分类准确率：{}
+        ---------------------
+        训练集和测试集之比：7:3
+        单颗树划分属性标准：信息增益
+        叶子节点处理方式：投票选择
+        """.format(self.end - self.start, self.train_corr, self.corr)
+
+        tc2 = wx.TextCtrl(p2, value= str_corr, style=(wx.TE_MULTILINE | wx.TE_DONTWRAP | wx.TE_READONLY),
+                               size=(800, 240))
         Box_ms.Add(tc2, 0)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         tc2.SetFont(font)
