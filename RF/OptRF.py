@@ -327,7 +327,7 @@ class OPTRF():
 
         # 得到预测集y
         y = self.predictData[:, -1]
-        trainy = self.trainData[:, -1]
+        print y
 
         # 产生森林 参数（训练集，特征，方差，树的个数，随机选择特征的个数，树的森度）
         Trees = self.RondomForest(self.trainData, self.labels, self.treeNum, self.treeDepth)
@@ -337,13 +337,10 @@ class OPTRF():
 
         # 得到每棵树的应变量的值 参数(森林，测试集，特征索引字典)
         predictY = self.getPredictY(Trees, self.predictData, predictLabelsDict)
-
-        # 得到训练集每棵树的应变量的值
-        trainpredictY = self.getPredictY(Trees, self.trainData, predictLabelsDict)
+        print predictY
 
         RSS = self.calRSS(y, predictY)
-        trainRSS = self.calRSS(trainy, trainpredictY)
 
-        return RSS,trainRSS
+        return RSS
 
 

@@ -97,6 +97,8 @@ class featureSelection():
         dcov2_xy = (A * B).sum() / float(n * n)
         dcov2_xx = (A * A).sum() / float(n * n)
         dcov2_yy = (B * B).sum() / float(n * n)
+        if dcov2_xx ==0 or dcov2_yy == 0:
+            return 0
         dcor = np.sqrt(dcov2_xy) / np.sqrt(np.sqrt(dcov2_xx) * np.sqrt(dcov2_yy))
 
         return dcor
@@ -162,6 +164,10 @@ class featureSelection():
 
         return all_featuresMCC
 
+    # def readFFResult(self, path):
+    #     result = pd.read_excel(path)
+    #     return result
+
     def chooseBestFeature(self, dataSet, isChooseFeaturesIndex, isChooseFeaturesValue, mccFY, betweenFeatureMCC, y, cnt):
         """
         特征选择
@@ -171,14 +177,13 @@ class featureSelection():
         :param mccFY: 所有特征与y的MCC
         :param betweenFeatureCorr: 特征之间的距离相关系数
         :param y: 因变量
-        :param m: 选择特征的个数
         :param cnt: 控制器
         :return: 选择的特征索引及特征值
         """
 
         # if len(isChooseFeaturesIndex) == m:
         #     return
-
+        featureNum = len(dataSet[0])
         dataLen = len(dataSet)
 
         if cnt == dataLen:
@@ -209,7 +214,7 @@ class featureSelection():
                         else:
                             mccff += betweenFeatureMCC[isChooseIndex][index] / 2
                     betweenMCC = mccfy / (mccff / isChooselen)
-                    if betweenMCC  >= maxMCC and betweenMCC >= 1.0:
+                    if betweenMCC  >= maxMCC and betweenMCC >= 1.0 + 1.0 / math.log(featureNum, 2):
                         # print 'mccfy/2：{0}\t result：{1}'.format(mccfy/2, mccfy / (mccff / isChooselen))
                         maxMCC = betweenMCC
                         nextAddIndex = index
@@ -247,12 +252,12 @@ class featureSelection():
         for index in isChooseFeaturesIndex:
             chooseFeature.append(labels[index])
 
-
         return dataSets, chooseFeature
 
 if __name__ =="__main__":
     path = "../datas/winequalityred.csv"
     fs = featureSelection()
+    # fs.readFFResult(path)
     data, features = fs.getBestFeatuleAanValue(path)
     print data
     print features
