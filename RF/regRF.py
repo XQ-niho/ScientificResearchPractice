@@ -6,6 +6,7 @@ create on: 2019-11
 @author: qiuzefeng
 """
 
+
 from random import randrange
 
 from numpy import *
