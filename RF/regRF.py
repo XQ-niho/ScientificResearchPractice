@@ -6,83 +6,29 @@ create on: 2019-11
 @author: qiuzefeng
 """
 
-import csv
 from random import randrange
 
 from numpy import *
-import numpy as np
 
 
-class TRARF():
+class RF():
     """
-    传统的随机森林
+    随机森林
     """
     def __init__(self, treeNum, treeDepth, trainData, predictData, labels):
         """
         设置随机森林参数
         :param treeNum: 决策树的棵数
         :param treeDepth: 决策树深度
-        :param selIndex:让传统的与优化的训练集与测试集一样
+        :param trainData: 训练集
+        :param predictData: 测试集
+        :param labels:特征
         """
         self.treeNum = treeNum
         self.treeDepth = treeDepth
         self.trainData = trainData
         self.predictData = predictData
         self.labels = labels
-
-    # def getDatasets(self, csvfilename):
-    #     """
-    #     获得数据集
-    #     :param csvfilename: 文件名或文件路径
-    #     :return: 数据集，特征
-    #     """
-    #     dataSets = []
-    #     labels = []
-    #
-    #     with open(csvfilename) as csvfile:
-    #         #读取csv文件
-    #         csv_reader = csv.reader(csvfile)
-    #         #读取第一行
-    #         label = next(csv_reader)
-    #         #获得特征
-    #         labels = label[: -1]
-    #
-    #         for row in csv_reader:
-    #             #把所有元素转换为float
-    #             ro = map(float, row)
-    #             dataSets.append(ro)
-    #
-    #     return dataSets, labels
-
-    # def trainDataAndPredictData(self, dataSets, selIndex):
-    #     """
-    #     把数据按7：3分成训练集与测试集
-    #     :param dataSet:
-    #     :return:
-    #     """
-    #     dataSet = dataSets.tolist()
-    #
-    #     length = len(dataSet)
-    #
-    #     # 产生长度为length的序列
-    #     # array = arange(length)
-    #     # 将序列随机排列
-    #     # random.shuffle(array)
-    #     array = selIndex
-    #
-    #     predictData = []
-    #     trainData = []
-    #
-    #     for index in array:
-    #         if len(trainData) <= length * 0.7:
-    #             trainData.append(dataSet[index])
-    #         else:
-    #             predictData.append(dataSet[index])
-    #
-    #     trainData = np.array(trainData)
-    #     predictData = np.array(predictData)
-    #
-    #     return trainData, predictData
 
     def binsplitDataSet(self, dataSet, feature, value):
         """

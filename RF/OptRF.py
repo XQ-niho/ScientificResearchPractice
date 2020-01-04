@@ -30,60 +30,6 @@ class OPTRF():
         self.predictData = predictData
         self.labels = labels
 
-
-    # def getDatasets(self, csvfilename):
-    #     """
-    #     获得数据集
-    #     :param csvfilename: 文件名或文件路径
-    #     :return: 数据集，特征
-    #     """
-    #     dataSets = []
-    #     labels = []
-    #
-    #     with open(csvfilename) as csvfile:
-    #         #读取csv文件
-    #         csv_reader = csv.reader(csvfile)
-    #         #读取第一行
-    #         label = next(csv_reader)
-    #         #获得特征
-    #         labels = label[: -1]
-    #
-    #         for row in csv_reader:
-    #             #把所有元素转换为float
-    #             ro = map(float, row)
-    #             dataSets.append(ro)
-    #
-    #     return dataSets, labels
-
-    # def trainDataAndPredictData(self, dataSets):
-    #     """
-    #     把数据按7：3分成训练集与测试集
-    #     :param dataSet:
-    #     :return:
-    #     """
-    #     dataSet = dataSets.tolist()
-    #
-    #     length = len(dataSet)
-    #
-    #     # 产生长度为length的序列
-    #     array = arange(length)
-    #     # 将序列随机排列
-    #     random.shuffle(array)
-    #
-    #     predictData = []
-    #     trainData = []
-    #
-    #     for index in array:
-    #         if len(trainData) <= length * 0.7:
-    #             trainData.append(dataSet[index])
-    #         else:
-    #             predictData.append(dataSet[index])
-    #
-    #     trainData = np.array(trainData)
-    #     predictData = np.array(predictData)
-    #
-    #     return trainData, predictData, array
-
     def binsplitDataSet(self, dataSet, feature, value):
         """
         切分数据集
@@ -327,7 +273,6 @@ class OPTRF():
 
         # 得到预测集y
         y = self.predictData[:, -1]
-        print y
 
         # 产生森林 参数（训练集，特征，方差，树的个数，随机选择特征的个数，树的森度）
         Trees = self.RondomForest(self.trainData, self.labels, self.treeNum, self.treeDepth)
@@ -337,7 +282,6 @@ class OPTRF():
 
         # 得到每棵树的应变量的值 参数(森林，测试集，特征索引字典)
         predictY = self.getPredictY(Trees, self.predictData, predictLabelsDict)
-        print predictY
 
         RSS = self.calRSS(y, predictY)
 

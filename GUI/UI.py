@@ -3,22 +3,29 @@
 import pandas as pd
 import wx
 import wx.grid
-import xlrd
 import time
 import os
 import csv
+import matplotlib
+matplotlib.use('WXAgg')
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.figure import Figure
+
 # from ARRF_audiology import result, getAttr_grop
 from RF import cart_of_featureval_continuity_sort_RF as sr
-
+from RF import showresult as rr
+from RF import result as re
 
 label =[]
 
 class TestFrame():
 
     def InitUI(self):
-        self.frame = wx.Frame(parent = None, title = '基于随机森林的中医药数据分析系统',  size=(1200, 600), pos=(400, 120))
-
+        self.frame = wx.Frame(parent=None, title = '基于随机森林的中医药数据分析系统',  size=(1200, 600), pos=(400, 120))
         p = wx.Panel(self.frame)
+        icon = wx.EmptyIcon()
+        icon.CopyFromBitmap(wx.BitmapFromImage(wx.Image(("../imgs/logo.png"), wx.BITMAP_TYPE_PNG)))
+        self.frame.SetIcon(icon)
 
         #定义最大的盒子，竖直方向
         Max_V_Box = wx.BoxSizer(wx.VERTICAL)
@@ -95,7 +102,7 @@ class TestFrame():
 
         #self.grid.CreateGrid(15000, 1000)
         self.grid1 = wx.grid.Grid(p, style=wx.TE_MULTILINE | wx.TE_RICH2 | wx.HSCROLL)
-        self.grid1.CreateGrid(15000, 1000)
+        self.grid1.CreateGrid(50000, 1000)
         Right_Box.Add(self.grid1, 0, border=10)
 
         Middle_H_Box.Add(Right_Box,flag = wx.TOP , border = 10)
@@ -311,7 +318,7 @@ class TestFrame():
 
     def F_met(self,event):#####################################
 
-        self.frame_fmet = wx.Frame(parent = None, title = '参数设置',  size=(800, 520), pos=(400, 120))
+        self.frame_fmet = wx.Frame(parent = None, title = '参数设置',  size=(850, 500), pos=(400, 120))
         self.pfmet = wx.Panel(self.frame_fmet)
 
         Box_Fmet = wx.BoxSizer(wx.VERTICAL)
@@ -341,25 +348,33 @@ class TestFrame():
 
         self.statictext = wx.StaticText(self.pfmet, label='select_forecast：', pos=(343, 123))
         list2 = ['分类预测', '回归预测']
-        self.ch2 = wx.Choice(self.pfmet, -1, choices=list2,size=(120, 22), pos=(440, 118))
+        self.ch2 = wx.Choice(self.pfmet, -1, choices=list2, size=(240, 22), pos=(440, 118))
         self.ch2.Bind(wx.EVT_CHOICE, self.on_choice)
 
-        self.ft1 = wx.StaticText(self.pfmet, label='tree_num：', pos=(343, 153), style=wx.ALIGN_CENTER)
+        self.ft1 = wx.StaticText(self.pfmet, label='tree_min：', pos=(343, 153), style=wx.ALIGN_CENTER)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.ft1.SetFont(font)
-        self.tree_num = wx.TextCtrl(self.pfmet, size=(120, 22), pos=(440, 148))
+        self.tree_min = wx.TextCtrl(self.pfmet, size=(30, 22), pos=(440, 148), style=0)
 
-        self.ft2 = wx.StaticText(self.pfmet, label='tree_depth：', pos=(343, 183), style=wx.ALIGN_CENTER)
+        self.ft11 = wx.StaticText(self.pfmet, label='tree_spa:', pos=(472, 153), style=wx.ALIGN_CENTER)
+        self.ft11.SetFont(font)
+        self.tree_spa= wx.TextCtrl(self.pfmet, size=(30,22), pos=(550, 148), style=0)
+
+        self.ft12 = wx.StaticText(self.pfmet, label='tree_max:', pos=(582, 153), style=wx.ALIGN_CENTER)
+        self.ft12.SetFont(font)
+        self.tree_max = wx.TextCtrl(self.pfmet, size=(30, 22), pos=(655, 148), style=0)
+
+        self.ft2 = wx.StaticText(self.pfmet, label='tree_depth:', pos=(343, 183), style=wx.ALIGN_CENTER)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.ft2.SetFont(font)
-        self.tree_depth = wx.TextCtrl(self.pfmet, size=(120, 22), pos=(440, 178))
+        self.tree_depth = wx.TextCtrl(self.pfmet, size=(240, 22), pos=(440, 178))
 
-        self.ft3 = wx.StaticText(self.pfmet, label='ratio：', pos=(343, 213), style=wx.ALIGN_CENTER)
+        self.ft3 = wx.StaticText(self.pfmet, label='ratio:', pos=(343, 213), style=wx.ALIGN_CENTER)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.ft3.SetFont(font)
-        self.ratio = wx.TextCtrl(self.pfmet,  value="7:3",size=(120, 22), pos=(440, 208),style = wx.TE_READONLY)
+        self.ratio = wx.TextCtrl(self.pfmet,  value="7:3", size=(240, 22), pos=(440, 208), style=wx.TE_READONLY)
 
-        btn3 = wx.Button(self.pfmet, label='开始建模', pos=(343, 243), size=(225, 30))
+        btn3 = wx.Button(self.pfmet, label='开始建模', pos=(400, 243), size=(240, 30))
         btn3.Bind(wx.EVT_BUTTON, self.btn3rec_fmet)
 
         self.pfmet.SetSizer(Box_Fmet)
@@ -371,21 +386,84 @@ class TestFrame():
         self.choose = event.GetString()
 
     def getSortParam(self):
-        return int(self.tree_num.GetValue()), int(self.tree_depth.GetValue())
+        return int(self.tree_min.GetValue()), int(self.tree_spa.GetValue()), \
+               int(self.tree_max.GetValue()), int(self.tree_depth.GetValue())
 
     def btn3rec_fmet(self,event):
-        self.corr = ''; self.train_corr = ''
-        tree_num, tree_depth = self.getSortParam()
-        if self.choose == u'分类预测':
-            self.start = time.clock()
-            self.corr, self.train_corr = sr.sortResult(self.filepath, tree_num, tree_depth)
-            self.end = time.clock()
-            # print self.corr
-        else:
-            pass
+        y1 = []
+        y2 = []
+        self.corr = ''
+        self.train_corr = ''
 
-        frame2 = wx.Frame(parent=None, title='随机森林分类建模结果', size=(500, 400))
-        p2 = wx.Panel(frame2)
+        tree_min, tree_spa, tree_max, tree_depth = self.getSortParam()
+
+        if self.choose == u'分类预测':
+            start = time.clock()
+            corrs, train_corrs = sr.sortResult(self.filepath, tree_min, tree_max, tree_spa, tree_depth)
+            end = time.clock()
+
+            best_trees = 0
+            best_train_trees = 0
+            max_train_corr = max(train_corrs)
+            max_corr = max(corrs)
+            for index, value in enumerate(corrs):
+                if max_corr == value:
+                    best_trees = index
+                    break
+            for index, value in enumerate(train_corrs):
+                if max_train_corr == value:
+                    best_train_trees = index
+                    break
+
+            # print self.corr
+            self.frame2 = wx.Frame(parent=None, title='随机森林分类建模结果', size=(800, 600))
+            y1 = corrs
+            y2 = train_corrs
+            self.str_corr = """
+            尊敬的用户，分类建模最好时结果如下：
+            ---------------------
+            建模所耗时间：{}s
+            最好时训练集决策树：{}
+            此时训练集分类准确率：{}
+            最好时测试集决策树：{}
+            此时测试集分类准确率：{}
+            ---------------------
+            决策树的深度：{}
+            训练集和测试集之比：7:3
+            单颗树划分属性标准：信息增益
+            叶子节点处理方式：投票选择
+            """.format(end - start, tree_min+best_train_trees*tree_spa,
+                       max_train_corr, tree_min+best_trees*tree_spa, max_corr, tree_depth)
+        else:
+            start = time.clock()
+
+            labels, averageTraRss, averageOptRss, min_ave_optrss, \
+            min_ave_trarss, everyopt, everytra = \
+                re.regreResult(self.filepath, tree_min,
+                        tree_spa, tree_max, tree_depth)
+
+            end = time.clock()
+            self.frame2 = wx.Frame(parent=None, title='随机森林改进建模对比结果', size=(800, 600))
+
+            y1 = averageTraRss
+            y2 = averageOptRss
+            self.str_corr = """
+            尊敬的用户，回归建模结果如下：
+            ---------------------------
+            建立模型耗时：{}s
+            传统随机森林测试集残差平方和：{}
+            改进随机森林测试集残差平方和：{}
+            传统随机森林测试集平均相对误差：{}
+            改进随机森林测试集平均相对误差：{}
+            ---------------------------
+            决策树深度：{}
+            训练集和测试集之比：7:3
+            单颗树划分属性标准：方差
+            叶子节点处理方式：取平均值
+            """.format(end - start, min_ave_trarss, min_ave_optrss,
+                            everytra, everyopt, tree_depth)
+
+        p2 = wx.Panel(self.frame2)
 
         Box_ms = wx.BoxSizer(wx.VERTICAL)
 
@@ -394,28 +472,29 @@ class TestFrame():
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         tc1.SetFont(font)
 
-        str_corr = """
-        尊敬的用户，建模结果如下：
-        ---------------------
-        建模所耗时间：{}s
-        训练集分类准确率：{}
-        测试集分类准确率：{}
-        ---------------------
-        训练集和测试集之比：7:3
-        单颗树划分属性标准：信息增益
-        叶子节点处理方式：投票选择
-        """.format(self.end - self.start, self.train_corr, self.corr)
-
-        tc2 = wx.TextCtrl(p2, value= str_corr, style=(wx.TE_MULTILINE | wx.TE_DONTWRAP | wx.TE_READONLY),
-                               size=(800, 240))
+        tc2 = wx.TextCtrl(p2, value=self.str_corr, style=(wx.TE_MULTILINE | wx.TE_DONTWRAP | wx.TE_READONLY),
+                                   size=(800, 200))
         Box_ms.Add(tc2, 0)
         font = wx.Font(11, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         tc2.SetFont(font)
 
+        figure = Figure()
+        axes = figure.add_subplot(111)
+        canvas = FigureCanvas(p2, -1, figure)
+        Box_ms.Add(canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
+        p2.Fit()
+
+        x = []
+        for i in range(tree_min, tree_max + 1, tree_spa):
+            x.append(i)
+
+        axes.plot(x, y1, label='tra')
+        axes.plot(x, y2, color='red', label='opt')
+
         p2.SetSizer(Box_ms)
 
-        frame2.Show()
-        frame2.Centre()
+        self.frame2.Show()
+        self.frame2.Centre()
 
 
     def on_list2_fmet(self,event):

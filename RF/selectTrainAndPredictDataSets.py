@@ -15,6 +15,9 @@ class GETDATASET():
     def OPTgetDataSet(self, filename):
 
         fs = featureSelection()
+        # result_x = fs.readResult("../datas/blogData_result_x.xlsx")
+        # result_y = fs.readResult("../datas/blogData_result_y.xlsx")
+        # data, features = fs.getBestFeatuleAanValue(path, result_x, result_y, result_y)
 
         # 得到特征选取后的数据 参数（文件路径，要选择的特征数）
         dataSet, labels = fs.getBestFeatuleAanValue(filename)

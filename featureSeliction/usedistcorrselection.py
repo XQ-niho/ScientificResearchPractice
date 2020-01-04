@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import csv
 
+import multiprocessing
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
 import numpy as np
@@ -97,7 +98,7 @@ class featureSelection():
         dcov2_xy = (A * B).sum() / float(n * n)
         dcov2_xx = (A * A).sum() / float(n * n)
         dcov2_yy = (B * B).sum() / float(n * n)
-        if dcov2_xx ==0 or dcov2_yy == 0:
+        if dcov2_xx == 0 or dcov2_yy ==0:
             return 0
         dcor = np.sqrt(dcov2_xy) / np.sqrt(np.sqrt(dcov2_xx) * np.sqrt(dcov2_yy))
 
@@ -163,7 +164,7 @@ class featureSelection():
                     all_featuresMCC[n][m] = all_featuresMCC[m][n]
 
         return all_featuresMCC
-
+    #
     # def readFFResult(self, path):
     #     result = pd.read_excel(path)
     #     return result
@@ -183,14 +184,19 @@ class featureSelection():
 
         # if len(isChooseFeaturesIndex) == m:
         #     return
-        featureNum = len(dataSet[0])
-        dataLen = len(dataSet)
+        featurenum = len(dataSet)
 
-        if cnt == dataLen:
+        if len(isChooseFeaturesIndex) >= featurenum * 0.1 + 1:
+            return
+
+        if cnt == featurenum:
             return
 
         if cnt == 1:
+            # # job = []
+            # ps = Process(target=self.getTheFirstFeature, args=(dataSet, y))
             maxmdis, thefirstfeatureId, allmdis = self.getTheFirstFeature(dataSet, y)
+
             isChooseFeaturesIndex.append(thefirstfeatureId)
             # print thefirstfeatureId
             isChooseFeaturesValue.append(dataSet[thefirstfeatureId])
@@ -200,12 +206,12 @@ class featureSelection():
 
         else:
             maxMCC = float("-inf")
-            notChooseIndex = arange(dataLen)
+            notChooseIndex = arange(featurenum)
             isChooselen = len(isChooseFeaturesIndex)
             nextAddIndex = -1
 
             for index in notChooseIndex:
-                mccfy = 0; mccff = 0
+                mccfy = 0.0; mccff = 0.0
                 if index not in isChooseFeaturesIndex:
                     mccfy = mccFY[index]
                     for isChooseIndex in isChooseFeaturesIndex:
@@ -214,7 +220,7 @@ class featureSelection():
                         else:
                             mccff += betweenFeatureMCC[isChooseIndex][index] / 2
                     betweenMCC = mccfy / (mccff / isChooselen)
-                    if betweenMCC  >= maxMCC and betweenMCC >= 1.0 + 1.0 / math.log(featureNum, 2):
+                    if betweenMCC >= maxMCC:
                         # print 'mccfy/2：{0}\t result：{1}'.format(mccfy/2, mccfy / (mccff / isChooselen))
                         maxMCC = betweenMCC
                         nextAddIndex = index
@@ -257,7 +263,6 @@ class featureSelection():
 if __name__ =="__main__":
     path = "../datas/winequalityred.csv"
     fs = featureSelection()
-    # fs.readFFResult(path)
     data, features = fs.getBestFeatuleAanValue(path)
     print data
     print features

@@ -339,7 +339,7 @@ def correctRate(y, predictY):
     return corr
 
 
-def sortResult(path, tree_num, tree_depth):
+def sortResult(path, tree_min, tree_max, tree_spa, tree_depth):
     """
     预测结果
     :param path:
@@ -363,21 +363,25 @@ def sortResult(path, tree_num, tree_depth):
     # 预测 先把特征与索引建立字典为预测时找到对应的数据
     labelsOfDict = labelsDict(labels)
 
+    corrs = []
+    train_corrs = []
+    for tree_num in range(tree_min, tree_max+1, tree_spa):
+        # 产生森林 参数（训练集，特征，方差，树的个数，随机选择特征的个数，树的森度）
+        Trees = RondomForest(trainData, labels, tree_num, tree_depth)
 
-    # 产生森林 参数（训练集，特征，方差，树的个数，随机选择特征的个数，树的森度）
-    Trees = RondomForest(trainData, labels, tree_num, tree_depth)
+        # 得到每棵树的因变量的值 参数(森林，测试集，特征索引字典)
+        predictY = getPredictY(Trees, predictData, labelsOfDict)
 
-    # 得到每棵树的因变量的值 参数(森林，测试集，特征索引字典)
-    predictY = getPredictY(Trees, predictData, labelsOfDict)
+        # 得到训练集每棵树的因变量的值
+        train_predictY = getPredictY(Trees, trainData, labelsOfDict)
 
-    # 得到训练集每棵树的因变量的值
-    train_predictY = getPredictY(Trees, trainData, labelsOfDict)
+        # 得到当前trees的准确率
+        corr = correctRate(y, predictY)
+        corrs.append(corr)
+        train_corr = correctRate(trainy, train_predictY)
+        train_corrs.append(train_corr)
 
-    # 得到当前trees的准确率
-    corr = correctRate(y, predictY)
-    train_corr = correctRate(trainy, train_predictY)
-
-    return corr, train_corr
+    return corrs, train_corrs
 
 if __name__ == '__main__':
     path = "../datas/splice.csv"
